@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SVG National Trust — Heritage Sites Database</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #f5f0e8;
+    --parchment: #e8dfc8;
+    --bark: #3d2b1a;
+    --mahogany: #6b2d0f;
+    --moss: #4a6741;
+    --sea: #1d5c7a;
+    --gold: #c49a2b;
+    --sand: #d4a96a;
+    --ink: #1a1208;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    min-height: 100vh;
+  }
+
+  /* ─── HEADER ─────────────────────────────────────────────── */
+  header {
+    background: var(--bark);
+    color: var(--cream);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header-bg {
+    background: linear-gradient(135deg, var(--bark) 0%, #5a3520 50%, var(--mahogany) 100%);
+    padding: 2.5rem 3rem 2rem;
+    border-bottom: 4px solid var(--gold);
+    position: relative;
+  }
+
+  .header-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c49a2b' fill-opacity='0.07'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+
+  .trust-seal {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .seal-icon {
+    width: 64px;
+    height: 64px;
+    border: 2px solid var(--gold);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    flex-shrink: 0;
+    background: rgba(196,154,43,0.1);
+  }
+
+  .header-text h1 {
+    font-size: 2.2rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    line-height: 1.1;
+    color: var(--cream);
+  }
+
+  .header-text h1 em {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .header-text .subtitle {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--sand);
+    margin-top: 0.4rem;
+  }
+
+  .header-meta {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.2rem;
+    flex-wrap: wrap;
+  }
+
+  .meta-pill {
+    background: rgba(196,154,43,0.15);
+    border: 1px solid rgba(196,154,43,0.4);
+    border-radius: 2px;
+    padding: 0.3rem 0.8rem;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.72rem;
+    color: var(--sand);
+    letter-spacing: 0.08em;
+  }
+
+  /* ─── CONTROLS ───────────────────────────────────────────── */
+  .controls {
+    background: var(--parchment);
+    border-bottom: 2px solid var(--sand);
+    padding: 1rem 3rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(61,43,26,0.15);
+  }
+
+  .controls label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--bark);
+    font-weight: 700;
+    margin-right: -0.5rem;
+  }
+
+  .filter-btn {
+    background: transparent;
+    border: 1.5px solid var(--bark);
+    color: var(--bark);
+    padding: 0.35rem 0.9rem;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--bark);
+    color: var(--cream);
+  }
+
+  .filter-btn.cat-fort.active { background: var(--mahogany); border-color: var(--mahogany); color: white; }
+  .filter-btn.cat-indigenous.active { background: var(--moss); border-color: var(--moss); color: white; }
+  .filter-btn.cat-colonial.active { background: var(--sea); border-color: var(--sea); color: white; }
+  .filter-btn.cat-natural.active { background: #3d6b3a; border-color: #3d6b3a; color: white; }
+  .filter-btn.cat-religious.active { background: #7a4a1a; border-color: #7a4a1a; color: white; }
+  .filter-btn.cat-battle.active { background: #8b1a1a; border-color: #8b1a1a; color: white; }
+
+  .site-count {
+    margin-left: auto;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.72rem;
+    color: var(--bark);
+    opacity: 0.6;
+  }
+
+  /* ─── MAIN GRID ──────────────────────────────────────────── */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 0;
+    min-height: calc(100vh - 200px);
+  }
+
+  /* ─── CARDS PANEL ────────────────────────────────────────── */
+  .cards-panel {
+    padding: 2rem 2.5rem;
+    overflow-y: auto;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--sand);
+  }
+
+  .section-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-family: 'Courier Prime', monospace;
+    color: var(--bark);
+  }
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* ─── SITE CARD ──────────────────────────────────────────── */
+  .site-card {
+    background: white;
+    border: 1px solid var(--parchment);
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s;
+    box-shadow: 0 1px 4px rgba(61,43,26,0.08);
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.3s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .site-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(61,43,26,0.18);
+    border-color: var(--gold);
+  }
+
+  .site-card.selected {
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 0 3px rgba(196,154,43,0.2), 0 8px 24px rgba(61,43,26,0.18);
+  }
+
+  .card-image {
+    height: 160px;
+    background: var(--parchment);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s;
+  }
+
+  .site-card:hover .card-image img {
+    transform: scale(1.05);
+  }
+
+  .card-image .placeholder-icon {
+    font-size: 3.5rem;
+    opacity: 0.3;
+  }
+
+  .cat-badge {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: white;
+  }
+
+  .protected-badge {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    background: var(--gold);
+    color: var(--bark);
+    padding: 0.2rem 0.5rem;
+    border-radius: 2px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .card-body {
+    padding: 1rem 1.1rem 1.1rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-ref {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    color: var(--sand);
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+  }
+
+  .card-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--bark);
+    margin-bottom: 0.3rem;
+  }
+
+  .card-location {
+    font-size: 0.82rem;
+    color: var(--sea);
+    font-style: italic;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .card-desc {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: #5a4030;
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    margin-top: 0.8rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--parchment);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-coords {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    color: #aaa;
+    letter-spacing: 0.04em;
+  }
+
+  .card-era {
+    font-size: 0.78rem;
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  /* ─── MAP / DETAIL PANEL ─────────────────────────────────── */
+  .side-panel {
+    background: var(--bark);
+    color: var(--cream);
+    border-left: 3px solid var(--gold);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 120px);
+    overflow: hidden;
+  }
+
+  .map-container {
+    flex: 0 0 280px;
+    position: relative;
+    background: #1a3040;
+    overflow: hidden;
+  }
+
+  .map-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .map-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, #0d2030 0%, #1d4060 100%);
+    color: var(--cream);
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.8rem;
+    opacity: 0.7;
+    gap: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  /* SVG Map */
+  #svg-map {
+    width: 100%;
+    height: 100%;
+  }
+
+  .detail-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+  }
+
+  .detail-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    opacity: 0.4;
+    gap: 0.8rem;
+    font-style: italic;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .detail-content { display: none; }
+  .detail-content.active { display: block; }
+
+  .detail-cat-badge {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 2px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: white;
+    margin-bottom: 0.8rem;
+  }
+
+  .detail-title {
+    font-size: 1.6rem;
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 0.3rem;
+    color: var(--cream);
+  }
+
+  .detail-subtitle {
+    font-style: italic;
+    font-size: 0.9rem;
+    color: var(--sand);
+    margin-bottom: 1rem;
+  }
+
+  .detail-divider {
+    height: 1px;
+    background: rgba(196,154,43,0.3);
+    margin: 1rem 0;
+  }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .detail-field label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+
+  .detail-field span {
+    font-size: 0.88rem;
+    color: var(--cream);
+    opacity: 0.9;
+  }
+
+  .detail-desc {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: rgba(245,240,232,0.85);
+    margin-top: 0.8rem;
+  }
+
+  .detail-status {
+    margin-top: 1rem;
+    padding: 0.6rem 0.8rem;
+    background: rgba(196,154,43,0.12);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 2px 2px 0;
+    font-size: 0.82rem;
+    color: var(--sand);
+    font-style: italic;
+  }
+
+  .map-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 1rem;
+    padding: 0.4rem 0.8rem;
+    background: rgba(29,92,122,0.3);
+    border: 1px solid rgba(29,92,122,0.6);
+    border-radius: 2px;
+    color: #7dc8e8;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .map-link:hover {
+    background: rgba(29,92,122,0.6);
+    color: white;
+  }
+
+  /* ─── CATEGORY COLORS ────────────────────────────────────── */
+  .bg-fort { background: var(--mahogany); }
+  .bg-indigenous { background: var(--moss); }
+  .bg-colonial { background: var(--sea); }
+  .bg-natural { background: #3d6b3a; }
+  .bg-religious { background: #7a4a1a; }
+  .bg-battle { background: #8b1a1a; }
+  .bg-cultural { background: #4a3a7a; }
+
+  /* ─── FOOTER ─────────────────────────────────────────────── */
+  footer {
+    background: var(--ink);
+    color: rgba(245,240,232,0.5);
+    padding: 1.2rem 3rem;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* ─── MINI MAP SVG ───────────────────────────────────────── */
+  .mini-map-wrap {
+    width: 100%;
+    height: 280px;
+    background: linear-gradient(170deg, #0d2535 0%, #12354d 100%);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .mini-map-wrap svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .map-dot {
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .map-dot circle {
+    transition: all 0.2s;
+  }
+
+  .map-dot:hover circle { r: 9; }
+  .map-dot.highlight circle { r: 10; filter: drop-shadow(0 0 6px var(--gold)); }
+
+  .dot-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 7px;
+    fill: rgba(245,240,232,0.7);
+    pointer-events: none;
+  }
+
+  /* ─── CONSERVATION PRIORITY ─────────────────────────────── */
+  .priority-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+  }
+
+  .priority-pips {
+    display: flex;
+    gap: 3px;
+  }
+
+  .pip {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    border: 1.5px solid currentColor;
+  }
+
+  .pip.filled { opacity: 1; }
+  .pip.empty { opacity: 0.2; }
+
+  .priority-1 .pip { color: #c0392b; }
+  .priority-1 .pip.filled { background: #c0392b; }
+  .priority-2 .pip { color: #e67e22; }
+  .priority-2 .pip.filled { background: #e67e22; }
+  .priority-3 .pip { color: #f1c40f; }
+  .priority-3 .pip.filled { background: #f1c40f; }
+  .priority-4 .pip { color: #27ae60; }
+  .priority-4 .pip.filled { background: #27ae60; }
+  .priority-5 .pip { color: #2980b9; }
+  .priority-5 .pip.filled { background: #2980b9; }
+
+  .priority-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    opacity: 0.8;
+  }
+
+  /* Card priority mini-badge */
+  .card-priority {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 0.5rem;
+  }
+
+  .card-priority-pips {
+    display: flex;
+    gap: 2px;
+  }
+
+  .card-pip {
+    width: 8px;
+    height: 8px;
+    border-radius: 1px;
+    border: 1px solid currentColor;
+  }
+
+  /* ─── CONDITION REPORT LINK ──────────────────────────────── */
+  .condition-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+    padding: 0.4rem 0.8rem;
+    background: rgba(74,103,65,0.2);
+    border: 1px solid rgba(74,103,65,0.5);
+    border-radius: 2px;
+    color: #7dc8a0;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .condition-link:hover {
+    background: rgba(74,103,65,0.4);
+    color: white;
+  }
+
+  .condition-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+    padding: 0.4rem 0.8rem;
+    background: rgba(180,140,60,0.15);
+    border: 1px solid rgba(180,140,60,0.3);
+    border-radius: 2px;
+    color: var(--sand);
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    font-style: italic;
+  }
+
+  /* ─── ACCESS DETAILS ─────────────────────────────────────── */
+  .access-block {
+    margin-top: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    background: rgba(29,92,122,0.12);
+    border-left: 3px solid #1d5c7a;
+    border-radius: 0 2px 2px 0;
+    font-size: 0.82rem;
+    color: #a0d0e8;
+  }
+
+  .access-block strong {
+    color: #7dc8e8;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  /* ─── OWNERSHIP / ADMIN PANEL ────────────────────────────── */
+  .admin-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.4rem 0.8rem;
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(196,154,43,0.25);
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.68rem;
+    color: rgba(196,154,43,0.6);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .admin-toggle:hover {
+    background: rgba(0,0,0,0.4);
+    color: var(--gold);
+    border-color: rgba(196,154,43,0.5);
+  }
+
+  .ownership-block {
+    display: none;
+    margin-top: 0.5rem;
+    padding: 0.7rem 0.9rem;
+    background: rgba(100,0,0,0.2);
+    border: 1px solid rgba(180,60,60,0.35);
+    border-radius: 2px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .ownership-block.visible { display: block; }
+
+  .ownership-block .priv-label {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #e88a8a;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .ownership-block .priv-label::before {
+    content: '🔒';
+    font-size: 0.8rem;
+  }
+
+  .ownership-block .own-field {
+    font-size: 0.85rem;
+    color: rgba(245,220,220,0.85);
+    margin-bottom: 0.3rem;
+    line-height: 1.5;
+  }
+
+  .ownership-block .own-field span {
+    color: rgba(245,220,220,0.55);
+    font-size: 0.75rem;
+  }
+
+  /* Admin unlock overlay */
+  .admin-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .admin-overlay.visible { display: flex; }
+
+  .admin-box {
+    background: var(--bark);
+    border: 2px solid var(--gold);
+    border-radius: 4px;
+    padding: 2rem;
+    width: 320px;
+    text-align: center;
+  }
+
+  .admin-box h3 {
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: var(--cream);
+    margin-bottom: 0.3rem;
+  }
+
+  .admin-box p {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    color: var(--sand);
+    margin-bottom: 1.2rem;
+    letter-spacing: 0.06em;
+  }
+
+  .admin-box input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(196,154,43,0.4);
+    border-radius: 2px;
+    color: var(--cream);
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.9rem;
+    text-align: center;
+    letter-spacing: 0.2em;
+    margin-bottom: 1rem;
+    outline: none;
+  }
+
+  .admin-box input:focus {
+    border-color: var(--gold);
+  }
+
+  .admin-box .btn-row {
+    display: flex;
+    gap: 0.6rem;
+  }
+
+  .admin-box button {
+    flex: 1;
+    padding: 0.5rem;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-unlock {
+    background: var(--gold);
+    border: none;
+    color: var(--bark);
+    font-weight: 700;
+  }
+
+  .btn-unlock:hover { background: #e0b030; }
+
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid rgba(196,154,43,0.4);
+    color: var(--sand);
+  }
+
+  .btn-cancel:hover { background: rgba(196,154,43,0.1); }
+
+  .admin-error {
+    color: #e88a8a;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    margin-top: 0.5rem;
+    display: none;
+  }
+
+  .admin-status-bar {
+    background: rgba(100,0,0,0.3);
+    border-bottom: 1px solid rgba(180,60,60,0.3);
+    padding: 0.4rem 3rem;
+    display: none;
+    align-items: center;
+    gap: 0.8rem;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    color: #e88a8a;
+    letter-spacing: 0.08em;
+  }
+
+  .admin-status-bar.visible { display: flex; }
+
+  .admin-lock-btn {
+    margin-left: auto;
+    background: transparent;
+    border: 1px solid rgba(180,60,60,0.5);
+    color: #e88a8a;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    transition: all 0.2s;
+  }
+
+  .admin-lock-btn:hover { background: rgba(180,60,60,0.2); }
+
+  /* Priority filter in controls */
+  .priority-filter-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-left: 1px solid rgba(61,43,26,0.2);
+    padding-left: 1rem;
+    margin-left: 0.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .side-panel { position: relative; height: auto; }
+    .controls { padding: 0.8rem 1rem; }
+    .cards-panel { padding: 1rem; }
+    header .header-bg { padding: 1.5rem 1rem 1rem; }
+    .header-text h1 { font-size: 1.6rem; }
+    footer { padding: 1rem; }
+  }
+
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-bg">
+    <div class="trust-seal">
+      <div class="seal-icon">🏛</div>
+      <div class="header-text">
+        <h1>St. Vincent &amp; the Grenadines<br><em>National Trust Heritage Register</em></h1>
+        <div class="subtitle">National Trust of Saint Vincent &amp; the Grenadines — Heritage Sites Database</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span class="meta-pill">📋 Database Version 1.0</span>
+      <span class="meta-pill">📅 Compiled March 2026</span>
+      <span class="meta-pill">🗺 SVG National Trust / NPA / UNESCO</span>
+      <span class="meta-pill">⚖️ National Trust Amendment Act No. 37, 2007</span>
+    </div>
+  </div>
+</header>
+
+<!-- Admin unlock overlay -->
+<div class="admin-overlay" id="admin-overlay">
+  <div class="admin-box">
+    <h3>🔒 Private Records Access</h3>
+    <p>Enter the admin password to view<br>ownership and private data fields</p>
+    <input type="password" id="admin-pw-input" placeholder="••••••••" onkeydown="if(event.key==='Enter') attemptUnlock()">
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeAdminOverlay()">Cancel</button>
+      <button class="btn-unlock" onclick="attemptUnlock()">Unlock</button>
+    </div>
+    <div class="admin-error" id="admin-error">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- Admin mode status bar -->
+<div class="admin-status-bar" id="admin-status-bar">
+  <span>🔓 ADMIN MODE ACTIVE — Private ownership data is now visible</span>
+  <button class="admin-lock-btn" onclick="lockAdmin()">🔒 Lock &amp; Hide Private Data</button>
+</div>
+
+<div class="controls">
+  <label>Category:</label>
+  <button class="filter-btn active" onclick="filterSites('all', this)">All Sites</button>
+  <button class="filter-btn cat-fort" onclick="filterSites('fort', this)">⚔ Forts &amp; Military</button>
+  <button class="filter-btn cat-battle" onclick="filterSites('battle', this)">🗡 Battle Sites</button>
+  <button class="filter-btn cat-indigenous" onclick="filterSites('indigenous', this)">🪨 Indigenous &amp; Amerindian</button>
+  <button class="filter-btn cat-colonial" onclick="filterSites('colonial', this)">🏗 Colonial Infrastructure</button>
+  <button class="filter-btn cat-religious" onclick="filterSites('religious', this)">⛪ Religious &amp; Civic</button>
+  <button class="filter-btn cat-natural" onclick="filterSites('natural', this)">🌿 Natural Heritage</button>
+  <div class="priority-filter-wrap">
+    <label>Priority:</label>
+    <button class="filter-btn" onclick="filterPriority(1, this)" title="Highly at risk" style="color:#c0392b;border-color:#c0392b">P1</button>
+    <button class="filter-btn" onclick="filterPriority(2, this)" title="At risk" style="color:#e67e22;border-color:#e67e22">P2</button>
+    <button class="filter-btn" onclick="filterPriority(3, this)" title="Needs attention" style="color:#c9a800;border-color:#c9a800">P3</button>
+    <button class="filter-btn" onclick="filterPriority(0, this)" title="Show all priorities">All</button>
+  </div>
+  <span class="site-count" id="site-count">Showing all 22 sites</span>
+</div>
+
+<div class="main-layout">
+
+  <!-- CARDS -->
+  <div class="cards-panel">
+    <div class="section-header">
+      <h2>Heritage Sites Register</h2>
+    </div>
+    <div class="cards-grid" id="cards-grid">
+      <!-- Cards injected by JS -->
+    </div>
+  </div>
+
+  <!-- SIDE PANEL -->
+  <div class="side-panel">
+    <!-- Mini Map -->
+    <div class="mini-map-wrap">
+      <svg viewBox="0 0 380 280" id="svg-map">
+        <!-- Ocean background -->
+        <rect width="380" height="280" fill="#0d2535"/>
+        <!-- Water texture dots -->
+        <g opacity="0.15" fill="#4a8aaa">
+          <circle cx="20" cy="30" r="1.5"/>
+          <circle cx="50" cy="60" r="1"/>
+          <circle cx="340" cy="40" r="1.5"/>
+          <circle cx="360" cy="100" r="1"/>
+          <circle cx="30" cy="200" r="1.5"/>
+          <circle cx="10" cy="150" r="1"/>
+        </g>
+
+        <!-- St Vincent island silhouette (simplified, centered left) -->
+        <g id="island-svg">
+          <!-- Main island body -->
+          <path d="M 145 30 C 155 25, 175 28, 185 40 C 195 52, 200 70, 198 90 C 196 110, 188 125, 180 140 C 172 155, 165 170, 158 185 C 151 200, 148 215, 145 228 C 142 215, 136 198, 130 182 C 124 166, 116 150, 110 135 C 104 120, 100 102, 102 85 C 104 68, 112 50, 125 38 Z"
+                fill="#2d5a2a" stroke="#4a8a3a" stroke-width="1.5"/>
+          <!-- Highlands -->
+          <path d="M 150 55 C 158 48, 168 52, 172 62 C 176 72, 170 82, 162 85 C 154 88, 145 82, 143 72 C 141 62, 143 58, 150 55 Z"
+                fill="#3d6b3a" opacity="0.7"/>
+        </g>
+
+        <!-- Grenadines chain -->
+        <!-- Bequia -->
+        <ellipse cx="155" cy="248" rx="12" ry="7" fill="#2d5a2a" stroke="#4a8a3a" stroke-width="1"/>
+        <text x="155" y="262" text-anchor="middle" font-family="monospace" font-size="7" fill="#a0c0a0">Bequia</text>
+        <!-- Mustique -->
+        <ellipse cx="168" cy="268" rx="7" ry="4" fill="#2d5a2a" stroke="#4a8a3a" stroke-width="1"/>
+        <!-- Canouan -->
+        <ellipse cx="185" cy="275" rx="8" ry="5" fill="#2d5a2a" stroke="#4a8a3a" stroke-width="1"/>
+        <!-- Union Island -->
+        <ellipse cx="205" cy="278" rx="9" ry="5" fill="#2d5a2a" stroke="#4a8a3a" stroke-width="1"/>
+        <!-- Tobago Cays area -->
+        <circle cx="222" cy="272" r="3" fill="#2d5a2a"/>
+        <circle cx="226" cy="275" r="2" fill="#2d5a2a"/>
+
+        <!-- Compass rose -->
+        <g transform="translate(340,40)">
+          <circle r="14" fill="rgba(0,0,0,0.4)" stroke="rgba(196,154,43,0.5)" stroke-width="1"/>
+          <text text-anchor="middle" y="-5" font-family="monospace" font-size="8" fill="rgba(196,154,43,0.9)">N</text>
+          <line x1="0" y1="-2" x2="0" y2="-10" stroke="rgba(196,154,43,0.9)" stroke-width="1.5"/>
+          <line x1="0" y1="2" x2="0" y2="10" stroke="rgba(196,154,43,0.5)" stroke-width="1"/>
+          <line x1="-10" y1="0" x2="10" y2="0" stroke="rgba(196,154,43,0.5)" stroke-width="1"/>
+        </g>
+
+        <!-- Island labels -->
+        <text x="155" y="20" text-anchor="middle" font-family="monospace" font-size="9" fill="rgba(196,154,43,0.8)" font-weight="bold">ST. VINCENT</text>
+        <text x="290" y="265" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(160,192,160,0.6)">THE GRENADINES</text>
+
+        <!-- Map dots will be injected by JS -->
+        <g id="map-dots"></g>
+      </svg>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel">
+      <div class="detail-empty" id="detail-empty">
+        <span style="font-size:2rem">🏛</span>
+        <span>Select a site to view<br>full heritage record</span>
+      </div>
+      <div class="detail-content" id="detail-content"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>© 2026 SVG National Trust Heritage Register — Working Database v1.0</span>
+  <span>Sources: SVG National Trust · NPA · UNESCO WHC · Ministry of Tourism SVG · Fort Charlotte Wikipedia</span>
+</footer>
+
+<script>
+const SITES = [
+  {
+    id: 1,
+    ref: "SVG-HER-001",
+    name: "Fort Charlotte",
+    altName: "Berkshire Hill Fort",
+    category: "fort",
+    location: "Berkshire Hill, Edinboro, Kingstown",
+    island: "St. Vincent",
+    lat: 13.168,
+    lng: -61.243,
+    mapX: 142,
+    mapY: 155,
+    era: "1763–1806",
+    protected: true,
+    status: "Open to public — Signal Station operational",
+    description: "The most significant British fortification on St. Vincent, construction began in 1763 when the British recovered the island and was completed in 1806. Named after Queen Charlotte, wife of King George III, it sits on a dramatic ridge 636 feet above Kingstown. Uniquely, its cannons face inland — a testament to the greater threat posed by the Caribs and French from the mountainous interior than from the sea. The officers' quarters now house a celebrated series of oil murals by Lindsay Prescott depicting the history of the Black Caribs and the Carib Wars.",
+    significance: "Protected National Heritage. Primary British military installation and key site of the Carib Wars. Only fort on the island where cannons face inland.",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Fort_Charlotte_SVG.jpg/800px-Fort_Charlotte_SVG.jpg",
+    googleMapsLink: "https://maps.google.com/?q=13.168,-61.243"
+  },
+  {
+    id: 2,
+    ref: "SVG-HER-002",
+    name: "Fort Duvernette",
+    altName: "Rock Fort",
+    category: "fort",
+    location: "Duvernette Islet, Young Island, Calliaqua",
+    island: "St. Vincent",
+    lat: 13.129,
+    lng: -61.203,
+    mapX: 158,
+    mapY: 185,
+    era: "c.1760s–1790s",
+    protected: true,
+    status: "Damaged — lower stairs washed out (2024). Check access with National Trust",
+    description: "An extraordinary fortification perched atop a 190-foot volcanic plug of columnar basalt rising sheer from the sea, accessible only by water. Originally built by the French prior to 1763, then rebuilt and enhanced by the British in the 1790s to protect the colonial anchorage at Calliaqua — then the island's commercial hub for the sugar trade. Two gun decks connected by 200 winding steps still bear original cannon from the reigns of George II and George III. In 1795 during the Second Carib War, the fort played a decisive role sheltering survivors of a Carib ambush on a British convoy. Decommissioned in 1878 and transferred to the SVG National Trust in 1971.",
+    significance: "Protected National Heritage (SVG National Trust, 1971). Rare bi-level island fortification. Key Second Carib War battle site.",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Fort_Duvernette_from_Young_Island.jpg/800px-Fort_Duvernette_from_Young_Island.jpg",
+    googleMapsLink: "https://maps.google.com/?q=13.129,-61.203"
+  },
+  {
+    id: 3,
+    ref: "SVG-HER-003",
+    name: "Dorsetshire Hill Battle Site & Chatoyer Monument",
+    altName: "Site of Chatoyer's Death",
+    category: "battle",
+    location: "Dorsetshire Hill, Kingstown",
+    island: "St. Vincent",
+    lat: 13.162,
+    lng: -61.237,
+    mapX: 144,
+    mapY: 160,
+    era: "1795",
+    protected: false,
+    status: "Monument open — site of annual National Hero Day commemoration",
+    description: "The site of one of the most significant events in Vincentian history: the death of Paramount Chief Joseph Chatoyer on 14 March 1795 during the Second Carib War. Chatoyer, who led Carib and French forces in an attempt to reclaim St. Vincent from British colonists, was killed by British soldiers who marched up from Kingstown and attacked first — foiling the planned assault on the capital. An obelisk monument now stands on the hill commemorating Chatoyer, St. Vincent's first and only National Hero. The surrounding area commands panoramic views over Kingstown and the Grenadines.",
+    significance: "National Hero commemoration site. Pivotal battle site of the Second Carib War (1795–1796). Scene of death of Joseph Chatoyer, National Hero of SVG.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.162,-61.237"
+  },
+  {
+    id: 4,
+    ref: "SVG-HER-004",
+    name: "Layou Petroglyph Park",
+    altName: "Layou Rock Art Site",
+    category: "indigenous",
+    location: "Layou, Leeward Highway",
+    island: "St. Vincent",
+    lat: 13.193,
+    lng: -61.262,
+    mapX: 133,
+    mapY: 138,
+    era: "AD 300–600",
+    protected: true,
+    status: "Open daily except Sunday — EC$2 entry, EC$8 guided tour",
+    description: "Home to the largest petroglyph in the entire Lesser Antilles, this UNESCO Tentative World Heritage site preserves extraordinary Amerindian rock carvings etched into a giant boulder by Saladoid-culture peoples between AD 300 and 600. The main engraving bears strong similarities to zemi carvings of Yocahu, the supreme being of Taíno culture, suggesting profound cultural connections across the pre-Columbian Caribbean. Set in an idyllic rainforest beside a small river, the park is managed by the NPA working with the SVG National Trust and a local community group. A small museum displays images of petroglyphs found across the island.",
+    significance: "Protected National Heritage (National Trust Amendment Act No. 37, 2007). On UNESCO Tentative World Heritage List. Largest petroglyph in the Lesser Antilles.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.193,-61.262"
+  },
+  {
+    id: 5,
+    ref: "SVG-HER-005",
+    name: "SVG Botanical Gardens",
+    altName: "St. Vincent Botanic Gardens",
+    category: "colonial",
+    location: "Montrose, Kingstown (1.6 km from capital)",
+    island: "St. Vincent",
+    lat: 13.163,
+    lng: -61.228,
+    mapX: 148,
+    mapY: 158,
+    era: "Established 1765",
+    protected: false,
+    status: "Open daily 6am–6pm — free entry, guided tours EC$10",
+    description: "Established in 1765 by General Robert Melville, Governor of the British Caribbean islands, the SVG Botanical Gardens holds the distinction of being the oldest botanical garden in the Western Hemisphere. Captain Bligh of HMS Bounty fame brought the first breadfruit tree to this island in 1793, and a direct descendant of that original tree still stands in the gardens. The 20-acre gardens contain specimens of mahogany, rubber, teak, and hundreds of tropical species. A small aviary houses two dozen rare St. Vincent parrots (Amazona guildingii), confiscated from illegal collections. The gardens represent a living archive of colonial-era horticultural science and slavery-era agricultural history.",
+    significance: "Oldest botanical garden in the Western Hemisphere. Critical conservation site for the nationally-protected St. Vincent Parrot. Colonial and slavery heritage.",
+    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Botanic_gardens_svg.jpg/800px-Botanic_gardens_svg.jpg",
+    googleMapsLink: "https://maps.google.com/?q=13.163,-61.228"
+  },
+  {
+    id: 6,
+    ref: "SVG-HER-006",
+    name: "Black Point Tunnel",
+    altName: "Jasper Rock Tunnel",
+    category: "colonial",
+    location: "Black Point, between Georgetown and Colonarie",
+    island: "St. Vincent",
+    lat: 13.253,
+    lng: -61.157,
+    mapX: 168,
+    mapY: 108,
+    era: "1812–1815",
+    protected: true,
+    status: "National Park — open daily 7am–5:30pm",
+    description: "A remarkable feat of engineering constructed between 1812 and 1815 under British colonial order. The 300-foot (91m) tunnel was cut entirely by hand through solid volcanic rock by enslaved workers using picks, shovels and sledgehammers, linking the Grand Sable estates to Byrea Bay to provide sugar export access. A natural spring feeds a trickling stream through the tunnel, and bats inhabit its vaulted ceiling. After the Second Carib War ended in 1796, estates north of Byrea were distributed to British settlers for sugar cultivation — this tunnel was their infrastructure lifeline. The site has also served as a film location, featuring in Pirates of the Caribbean: Curse of the Black Pearl.",
+    significance: "Protected National Heritage. Outstanding example of enslaved-labour colonial engineering. Directly linked to post-Carib War land redistribution and the sugar economy.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.253,-61.157"
+  },
+  {
+    id: 7,
+    ref: "SVG-HER-007",
+    name: "St. George's Anglican Cathedral",
+    altName: "Kingstown Anglican Church",
+    category: "religious",
+    location: "Grenville Street, Kingstown",
+    island: "St. Vincent",
+    lat: 13.158,
+    lng: -61.222,
+    mapX: 150,
+    mapY: 162,
+    era: "1820 (rebuilt)",
+    protected: false,
+    status: "Open to visitors — active cathedral",
+    description: "The mother church of the Diocese of the Windward Islands, St. George's Cathedral was built in 1820 on the site of an earlier church destroyed by a late 18th-century hurricane. The cathedral's dignified Georgian architecture features simple wooden pews, an ornate gilded chandelier, a brass lectern, and a circular mahogany pulpit. Its most famous treasure is a stained-glass window gifted by Queen Victoria — originally commissioned for St. Paul's Cathedral, London, to honour her first grandson. The queen was reportedly horrified by the angel's red robe and immediately dispatched the window to St. Vincent. The cathedral's graveyard contains markers that document the island's colonial history.",
+    significance: "Mother church of the Windward Islands Diocese. Contains the unique 'rejected' Queen Victoria stained-glass window. Georgian architecture of exceptional quality.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.158,-61.222"
+  },
+  {
+    id: 8,
+    ref: "SVG-HER-008",
+    name: "St. Mary's Roman Catholic Cathedral",
+    altName: "Cathedral of the Assumption",
+    category: "religious",
+    location: "Kingstown",
+    island: "St. Vincent",
+    lat: 13.158,
+    lng: -61.221,
+    mapX: 150,
+    mapY: 163,
+    era: "Begun 1823",
+    protected: false,
+    status: "Open to visitors — active cathedral",
+    description: "A striking and architecturally unique cathedral built in stages beginning in 1823. The design is a remarkable and 'strangely appealing' blend of Moorish, Georgian, and Romanesque styles applied to black volcanic brick — an eclectic fusion found nowhere else in the Caribbean. It stands directly across the street from St. George's Anglican Cathedral, the two forming one of the most architecturally diverse religious precincts in the Eastern Caribbean. The Kingstown Methodist Church, built nearby in 1841 by freed enslaved people, completes an extraordinary trio of 19th-century ecclesiastical buildings within walking distance.",
+    significance: "Rare blend of Moorish, Georgian and Romanesque styles in black brick. Part of Kingstown's exceptional 19th-century religious precinct alongside Anglican and Methodist churches.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.158,-61.221"
+  },
+  {
+    id: 9,
+    ref: "SVG-HER-009",
+    name: "Carnegie Building (National Trust HQ)",
+    altName: "Carnegie Library",
+    category: "colonial",
+    location: "Kingstown",
+    island: "St. Vincent",
+    lat: 13.157,
+    lng: -61.221,
+    mapX: 150,
+    mapY: 164,
+    era: "1909",
+    protected: false,
+    status: "National Trust headquarters — open Mon–Fri 9am–5pm",
+    description: "Built in 1909 as a public library funded by Scottish-American industrialist Andrew Carnegie, this building now serves as the headquarters of the St. Vincent and the Grenadines National Trust. Carnegie, who educated himself in public libraries before making his fortune in iron and steel in the USA, funded 2,509 libraries worldwide between 1883 and 1929. The Carnegie Building in Kingstown is one of the Caribbean's most distinctive heritage buildings and houses the Trust's museum, which preserves the cultural, natural and architectural heritage of St. Vincent — featuring artifacts from the Carib Wars, pre-Columbian pottery, Chatoyer relics, colonial exhibits and independence memorabilia.",
+    significance: "National Trust headquarters. One of very few surviving Carnegie libraries in the Caribbean. Houses the national heritage collection including Carib War and pre-Columbian artifacts.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.157,-61.221"
+  },
+  {
+    id: 10,
+    ref: "SVG-HER-010",
+    name: "Kingstown 'City of Arches' Historic Precinct",
+    altName: "Arrowroot Warehouse Arcades",
+    category: "colonial",
+    location: "Upper Bay Street, Kingstown",
+    island: "St. Vincent",
+    lat: 13.156,
+    lng: -61.22,
+    mapX: 151,
+    mapY: 165,
+    era: "18th–19th century",
+    protected: false,
+    status: "Living historic streetscape — commercial use",
+    description: "The historic heart of Kingstown earned the city its nickname 'the City of Arches' from the distinctive street-level Georgian stone arcades that connect several buildings along Upper Bay Street. These rows of arches with second-floor overhangs were originally constructed as arrowroot warehouses, sheltering workers, vendors and pedestrians from the Caribbean sun and rain for over two centuries. The cobblestone streets and colonial stone buildings of the precinct represent the most intact Georgian commercial streetscape in the Eastern Caribbean. The precinct also includes the busy Kingstown Market, a three-storey building occupying a whole city block.",
+    significance: "Most intact Georgian commercial arcade streetscape in the Eastern Caribbean. Directly tied to the arrowroot trade that was SVG's economic backbone through the 19th century.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.156,-61.220"
+  },
+  {
+    id: 11,
+    ref: "SVG-HER-011",
+    name: "La Soufrière Volcano",
+    altName: "Soufrière",
+    category: "natural",
+    location: "Northern St. Vincent",
+    island: "St. Vincent",
+    lat: 13.333,
+    lng: -61.178,
+    mapX: 158,
+    mapY: 62,
+    era: "Active — last major eruption 2021",
+    protected: false,
+    status: "Hiking accessible — check NPA for current conditions post-2021 eruption",
+    description: "St. Vincent's La Soufrière rises majestically to over 4,000 feet (1,234m) and is one of the most studied volcanoes in the world — sharing that distinction with Mount St. Helens in the USA. The volcano last erupted catastrophically in April 2021, causing the evacuation of tens of thousands of Vincentians and significant damage to northern communities. Previous major eruptions occurred in 1902 (killing 2,000 people), 1971 and 1979. The 1902 ashflow formed the Rabacca Dry River on the windward coast, a dramatic geological feature still visible today. The volcano is a defining feature of Vincentian identity and history, and its activity has shaped human settlement patterns across the island for centuries.",
+    significance: "One of the most studied volcanoes on Earth. Defining feature of Vincentian geography, culture and history. Major 2021 eruption caused significant displacement and damage.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.333,-61.178"
+  },
+  {
+    id: 12,
+    ref: "SVG-HER-012",
+    name: "Falls of Baleine",
+    altName: null,
+    category: "natural",
+    location: "Northern tip, Leeward coast — accessible by boat only",
+    island: "St. Vincent",
+    lat: 13.37,
+    lng: -61.22,
+    mapX: 147,
+    mapY: 44,
+    era: "Natural",
+    protected: true,
+    status: "NPA managed — moorings and landing platform installed",
+    description: "Among St. Vincent's most spectacular natural wonders, the Falls of Baleine plunge approximately 60 feet in a single dramatic stage into a rock-enclosed freshwater pool perfect for swimming. Accessible only by boat from the north Leeward coast (approximately 2 hours from Kingstown), the site is set against a backdrop of dramatic volcanic cliffs draped in lush tropical vegetation. The National Parks Authority has installed a footpath, bridge, and landing platform, as well as five moorings to facilitate anchorage. The inaccessibility of the site by road has preserved its pristine character.",
+    significance: "Protected natural heritage site. One of SVG's most dramatic natural features. Preserved due to sea-access-only remoteness.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.370,-61.220"
+  },
+  {
+    id: 13,
+    ref: "SVG-HER-013",
+    name: "Owia Salt Pond",
+    altName: null,
+    category: "natural",
+    location: "Owia, northeastern St. Vincent",
+    island: "St. Vincent",
+    lat: 13.363,
+    lng: -61.143,
+    mapX: 175,
+    mapY: 48,
+    era: "Natural — Garifuna/Kalinago community site",
+    protected: true,
+    status: "NPA managed — open to visitors",
+    description: "Located on the northeastern coast near the Garifuna/Carib village of Owia, the salt pond is a spectacular natural phenomenon where Atlantic swells surge through volcanic rock channels, filling a series of natural pools. The village of Owia is one of the last surviving Garifuna (Black Carib) communities on St. Vincent, making this site of deep cultural as well as natural significance. The journey from Kingstown along the scenic eastern coast (approximately 2 hours) passes the Rabacca Dry River — a solidified ashflow from the 1902 Soufrière eruption — and the Black Point Tunnel, offering a remarkable transect of Vincentian heritage.",
+    significance: "Protected natural site within a Garifuna/Kalinago community. Cultural significance as last surviving Carib village area. Geological interest — volcanic rock formation.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.363,-61.143"
+  },
+  {
+    id: 14,
+    ref: "SVG-HER-014",
+    name: "Vermont Nature Trail",
+    altName: "Buccament Valley Trail",
+    category: "natural",
+    location: "Upper Buccament Valley, Vermont",
+    island: "St. Vincent",
+    lat: 13.21,
+    lng: -61.24,
+    mapX: 140,
+    mapY: 128,
+    era: "Natural — gazetted trail",
+    protected: true,
+    status: "NPA managed — guided walks recommended",
+    description: "Beginning near the head of the Buccament Valley and winding through dense tropical rainforest, the Vermont Nature Trail is the primary habitat for the critically endangered St. Vincent Parrot (Amazona guildingii), the national bird — found nowhere else on Earth. The trail also offers the best chance of encountering the Whistling Warbler, another endemic species. The rich rainforest ecosystem harbours tree ferns, bromeliads, and extraordinary biodiversity. The trail represents SVG's commitment to protecting native ecosystems and has both natural and cultural heritage value as traditional Carib territory.",
+    significance: "Primary habitat for the St. Vincent Parrot (Amazona guildingii) — globally endangered endemic species and SVG national bird. Protected rainforest of national ecological significance.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.210,-61.240"
+  },
+  {
+    id: 15,
+    ref: "SVG-HER-015",
+    name: "Tobago Cays Marine Park",
+    altName: "Tobago Cays",
+    category: "natural",
+    location: "Tobago Cays, Southern Grenadines",
+    island: "The Grenadines",
+    lat: 12.638,
+    lng: -61.362,
+    mapX: 222,
+    mapY: 270,
+    era: "Natural — marine park gazetted",
+    protected: true,
+    status: "Protected Marine Park — diving/sailing with licensed operators only",
+    description: "Five uninhabited islands protected by the Horseshoe Reef, the Tobago Cays represent one of the Caribbean's most pristine marine environments. The reef provides world-class snorkelling and diving with extraordinary biodiversity. The dazzling powdery white sand beaches, crystal-clear water in impossible shades of blue, and unspoiled coral reef ecosystems make this one of the Eastern Caribbean's foremost natural heritage sites. The marine park protects hawksbill and leatherback sea turtles, diverse coral species, and abundant marine life. Access for diving must be through registered local operators.",
+    significance: "Protected Marine Park. One of the finest marine ecosystems in the Eastern Caribbean. Critical nesting habitat for endangered sea turtle species.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=12.638,-61.362"
+  },
+  {
+    id: 16,
+    ref: "SVG-HER-016",
+    name: "Buccament Petroglyph Site",
+    altName: "Buccament Rock Shelter",
+    category: "indigenous",
+    location: "Buccament Bay area, Leeward coast",
+    island: "St. Vincent",
+    lat: 13.2,
+    lng: -61.257,
+    mapX: 135,
+    mapY: 135,
+    era: "Pre-Columbian",
+    protected: false,
+    status: "UNESCO Tentative List — protection status under review",
+    description: "A uniquely remarkable pre-Columbian rock art site where the main panel is engraved across the back wall of a rock shelter — unique in the entire Caribbean. The panel consists of two sets of abstract motifs forming rows some eight metres long, with one set deeply engraved and superimposed over a shallower set. The script-like linear patterns include circles, spirals, dots and loops in arrangements that have led some researchers to suggest it may represent a prototype written language — though further research is needed. The site forms part of SVG's broader rock art heritage comprising 18 recorded sites across the island, nominated for UNESCO World Heritage status.",
+    significance: "Unique in the Caribbean — rock shelter with script-like engravings. Part of UNESCO Tentative World Heritage nomination for SVG Rock Art. Possible proto-writing system.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.200,-61.257"
+  },
+  {
+    id: 17,
+    ref: "SVG-HER-017",
+    name: "Mesopotamia Valley (Mespo)",
+    altName: "Mesopotamia Agricultural Landscape",
+    category: "cultural",
+    location: "Mesopotamia, central St. Vincent",
+    island: "St. Vincent",
+    lat: 13.2,
+    lng: -61.17,
+    mapX: 165,
+    mapY: 132,
+    era: "Colonial agricultural — ongoing",
+    protected: false,
+    status: "Working agricultural landscape — gardens open",
+    description: "The lush and fertile Mesopotamia Valley, nicknamed 'Mespo' by Vincentians, represents one of the most productive and visually spectacular agricultural landscapes in the Eastern Caribbean. Dense rainforest on the steep valley walls frames endless banana and coconut plantations on the valley floor, watered by numerous streams. The valley contains Montreal Gardens — 7.5 acres of restored colonial-era plantation gardens in the shadow of Grand Bonhomme Mountain, redesigned by Welsh landscape designer Timothy Vaughn with anthurium, ginger lilies, bird-of-paradise and tree ferns. The valley's rugged windward scenery contrasts dramatically with the calm leeward coast.",
+    significance: "Outstanding cultural landscape of colonial agricultural heritage. Montreal Gardens — significant restored plantation garden. Biodiversity corridor connecting highland and lowland ecosystems.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.200,-61.170"
+  },
+  {
+    id: 18,
+    ref: "SVG-HER-018",
+    name: "Wallilabou Heritage Park",
+    altName: "Wallilabou Bay",
+    category: "cultural",
+    location: "Wallilabou Bay, Leeward coast",
+    island: "St. Vincent",
+    lat: 13.258,
+    lng: -61.265,
+    mapX: 132,
+    mapY: 106,
+    era: "18th–19th century colonial / 2003 film set",
+    protected: false,
+    status: "Heritage park open — film set remains in place",
+    description: "Wallilabou Bay is a historic anchorage with deep roots in the colonial sugar economy, later achieving global recognition as the filming location for Disney's Pirates of the Caribbean: The Curse of the Black Pearl (2003). Disney constructed the Port Royal set buildings at this site to recreate an 18th-century pirate town. The bay and its surrounding community are now managed as a heritage park. Beyond the film heritage, the bay represents an important anchorage and trading site through the colonial era, and the Wallilabou River valley contains significant natural and cultural features.",
+    significance: "Colonial anchorage and sugar-trade heritage site. International cultural significance as filming location for Pirates of the Caribbean. Heritage park managed by NPA.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.258,-61.265"
+  },
+  {
+    id: 19,
+    ref: "SVG-HER-019",
+    name: "Wilkie's Battery",
+    altName: "Villa Estate Battery",
+    category: "fort",
+    location: "Villa, near Young Island",
+    island: "St. Vincent",
+    lat: 13.132,
+    lng: -61.208,
+    mapX: 155,
+    mapY: 183,
+    era: "Pre-1763 (French)",
+    protected: false,
+    status: "Converted — now Grand View Beach Hotel",
+    description: "Sister fortification to Fort Duvernette, Wilkie's Battery was one of two French-built defences constructed prior to the British taking control of St. Vincent in 1763. Both sites guarded Calliaqua Bay when it was the island's commercial centre. The battery fell into disrepair after Fort Charlotte's construction rendered both sites redundant. In the late 1800s the building was converted into the Villa Estate's cotton drying-house, then into a private residence in the 1940s, and in 1964 became the Grand View Beach Hotel — one of the oldest continuously operating hotels on the island. The heritage fabric of the original battery survives within the hotel structure.",
+    significance: "Pre-1763 French fortification. Rare surviving example of pre-British colonial military heritage. Original fabric survives within operating hotel structure.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.132,-61.208"
+  },
+  {
+    id: 20,
+    ref: "SVG-HER-020",
+    name: "Second Carib War Battle Site — Vigie",
+    altName: "Vigie Post / Carib War Battlefield",
+    category: "battle",
+    location: "Calliaqua area, near Fort Duvernette",
+    island: "St. Vincent",
+    lat: 13.13,
+    lng: -61.205,
+    mapX: 156,
+    mapY: 184,
+    era: "September 1795",
+    protected: false,
+    status: "Battlefield site — not formally marked",
+    description: "Site of one of the most significant engagements of the Second Carib War (1795–1796). In September 1795, a British convoy of 300 men under Colonel Ritchie attempted to carry supplies from Kingstown to the British post at Vigie, near Fort Duvernette. The convoy was ambushed by Kalinago (Carib) warriors and badly defeated — Colonel Ritchie was mortally wounded leading survivors in a fighting retreat. Around 60 men were killed or taken prisoner and the supplies were lost. Survivors sheltering at Fort Duvernette were saved by Major Henry Sharpe opening artillery fire to cover their escape. This engagement was part of the broader Brigands' War in which Carib forces allied with France nearly expelled the British from the island.",
+    significance: "Key battle site of the Second Carib War / Brigands' War (1795–96). Scene of significant British defeat by Kalinago forces. Linked to Fort Duvernette's most important military action.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.130,-61.205"
+  },
+  {
+    id: 21,
+    ref: "SVG-HER-021",
+    name: "Trinity Falls",
+    altName: null,
+    category: "natural",
+    location: "Richmond, Northern Leeward coast",
+    island: "St. Vincent",
+    lat: 13.315,
+    lng: -61.235,
+    mapX: 141,
+    mapY: 72,
+    era: "Natural",
+    protected: false,
+    status: "Accessible via 20-minute rainforest hike from Richmond",
+    description: "Set within a deep volcanic canyon approximately four miles from Richmond Vale, Trinity Falls is widely considered the most beautiful waterfall in St. Vincent. A 20-minute hike through lush tropical rainforest brings visitors to the falls, which cascade in triple tiers into pools suitable for swimming. The Richmond Vale area requires approximately a two-hour drive from Kingstown along the scenic Leeward coast. The falls and their surrounding forest represent a pristine natural environment typical of the volcanic highland interiors that have remained largely undisturbed through the colonial and post-colonial eras.",
+    significance: "Widely regarded as SVG's most beautiful waterfall. Pristine volcanic canyon rainforest ecosystem. Located in territory historically associated with Garifuna communities.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.315,-61.235"
+  },
+  {
+    id: 22,
+    ref: "SVG-HER-022",
+    name: "Kingstown Methodist Church",
+    altName: null,
+    category: "religious",
+    location: "Kingstown",
+    island: "St. Vincent",
+    lat: 13.158,
+    lng: -61.222,
+    mapX: 150,
+    mapY: 162,
+    era: "1841",
+    protected: false,
+    status: "Active church — open to visitors",
+    description: "Built in 1841 by freed enslaved people following emancipation, the Kingstown Methodist Church is a powerful symbol of post-slavery community building and religious freedom. The exterior is of brick construction simply decorated with quoins forming the corners, and the roof is held together by an unusual system of metal straps, bolts and wooden pins — an inventive structural solution reflecting the resourcefulness of its builders. The church stands as the third element of Kingstown's exceptional 19th-century ecclesiastical precinct alongside the Anglican Cathedral and Catholic Cathedral, forming one of the most architecturally diverse religious groupings in the Eastern Caribbean.",
+    significance: "Built by freed enslaved people post-emancipation (1841). Unusual and inventive structural system. Key element of Kingstown's UNESCO-quality 19th-century ecclesiastical precinct.",
+    image: null,
+    googleMapsLink: "https://maps.google.com/?q=13.158,-61.222"
+  }
+];
+
+// ─── NEW FIELDS added to each site (patch object) ────────────
+// priority: 1=Highly at risk, 2=At risk, 3=Needs attention, 4=Good condition, 5=Well maintained
+// conditionReportUrl: Google Doc share link (null = not yet uploaded)
+// conditionReportDate: date of last condition report
+// accessDetails: public access notes
+// ownership: PRIVATE — only shown in admin mode
+const SITE_EXTRAS = {
+  1:  { priority: 3, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Open daily 9am–4pm. Free entry. 5 min drive from Kingstown — taxi available. Steep uphill approach.",
+        ownership: { type: "Government", body: "Government of St. Vincent & the Grenadines (NPA)", contact: "npa@gov.vc", notes: "Managed by National Parks, Rivers & Beaches Authority" } },
+  2:  { priority: 2, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Accessible by boat only — approximately 5 min from Young Island. Lower stairs washed out (2024). Boat hire required. Contact National Trust before visiting.",
+        ownership: { type: "National Trust", body: "SVG National Trust (transferred 1971)", contact: "svgnt@vincysurf.com", notes: "Original transfer from Crown Estate. Restoration funding required urgently." } },
+  3:  { priority: 4, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Accessible by road. Monument open at all times. Site of annual National Hero Day commemoration (14 March). Panoramic views from summit.",
+        ownership: { type: "Government", body: "Government of SVG", contact: "ministry@gov.vc", notes: "Site maintained by government for national commemorations." } },
+  4:  { priority: 3, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Open daily except Sunday. Entry EC$2, guided tour EC$8. Roadside parking available. 30 min from Kingstown along Leeward Highway.",
+        ownership: { type: "NPA / Community", body: "National Parks Authority in partnership with local community group", contact: "npa@gov.vc", notes: "Community management agreement in place." } },
+  5:  { priority: 4, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Open daily 6am–6pm. Free entry, guided tours EC$10. Walking distance from central Kingstown (1.6 km). Parrot aviary on site.",
+        ownership: { type: "Government", body: "Government of SVG / NPA", contact: "npa@gov.vc", notes: "Managed by NPA. Some plots leased to research institutions." } },
+  6:  { priority: 4, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "National Park — open daily 7am–5:30pm. Entry fee applies. Located on Windward coast highway, approx 1.5 hrs from Kingstown. Torch recommended inside tunnel.",
+        ownership: { type: "Government", body: "National Parks Authority", contact: "npa@gov.vc", notes: "Gazetted National Park. Film location fees previously charged." } },
+  7:  { priority: 4, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Open to visitors during daylight hours. Active cathedral — please respect services. Central Kingstown, walking distance from Market Square.",
+        ownership: { type: "Religious", body: "Diocese of the Windward Islands (Anglican)", contact: "windwarddiocese@gmail.com", notes: "Active place of worship. Graveyard access permitted with permission." } },
+  8:  { priority: 4, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Open to visitors. Active cathedral — please respect services. Central Kingstown, directly opposite St. George's Anglican Cathedral.",
+        ownership: { type: "Religious", body: "Roman Catholic Diocese of Bridgetown", contact: null, notes: "Active place of worship." } },
+  9:  { priority: 4, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "National Trust headquarters. Open Mon–Fri 9am–5pm. Museum admission EC$5. Central Kingstown.",
+        ownership: { type: "National Trust", body: "St. Vincent & the Grenadines National Trust", contact: "svgnt@vincysurf.com", notes: "Operating headquarters. Museum, archive and library on site." } },
+  10: { priority: 3, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Living streetscape — open at all times. Best explored on foot from central Kingstown. Market busiest Fri–Sat mornings.",
+        ownership: { type: "Mixed", body: "Multiple private and government owners", contact: null, notes: "No single ownership. Planning controls under Building Act apply. Formal conservation area designation recommended." } },
+  11: { priority: 5, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Hiking to summit — check NPA for current conditions following 2021 eruption. 4–5 hr round trip from Georgetown trailhead. Guide mandatory. Permit required.",
+        ownership: { type: "Crown/Government", body: "Crown Lands — Government of SVG", contact: "lands@gov.vc", notes: "Monitored by UWI Seismic Research Centre. Access controlled by NPA post-2021." } },
+  12: { priority: 5, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Accessible by boat only — approx 2 hrs from Kingstown by charter. NPA moorings and landing platform in place. Best in calm sea conditions.",
+        ownership: { type: "Crown/Government", body: "National Parks Authority", contact: "npa@gov.vc", notes: "Marine protected area. No land development permitted." } },
+  13: { priority: 5, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "2 hr drive from Kingstown along windward coast. Small admission fee. Community managed. Carib village of Owia nearby — visitors welcome to engage respectfully.",
+        ownership: { type: "Community / NPA", body: "Owia community / National Parks Authority", contact: "npa@gov.vc", notes: "Garifuna community site. Sensitive community engagement required." } },
+  14: { priority: 5, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Trail starts near top of Buccament Valley. NPA managed. Best visited early morning for parrot sightings. Guided walks recommended. 45 min from Kingstown.",
+        ownership: { type: "Crown/Government", body: "National Parks Authority", contact: "npa@gov.vc", notes: "Critical parrot habitat. Strict no-disturbance rules in force." } },
+  15: { priority: 5, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Accessible by yacht or licensed charter only. Anchoring in designated zones. No overnight camping on islands. Dive with licensed operators only.",
+        ownership: { type: "Government", body: "SVG National Parks / Tobago Cays Marine Park Authority", contact: "npa@gov.vc", notes: "International marine park. Shared management with St. Lucia under OECS framework." } },
+  16: { priority: 2, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Access restricted — not open to casual visitors. Contact SVG National Trust for research access. Exact location not publicly disclosed for site protection.",
+        ownership: { type: "Private / Crown", body: "Ownership under review — subject to UNESCO process", contact: "svgnt@vincysurf.com", notes: "URGENT: Site protection order required. Exact coordinates withheld from public record for security." } },
+  17: { priority: 4, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Valley accessible by road — scenic drive from Kingstown approx 45 min. Montreal Gardens open Tue–Sun 9am–5pm. EC$10 entry. Excellent birding.",
+        ownership: { type: "Mixed", body: "Multiple private agricultural landowners; Montreal Gardens privately owned", contact: null, notes: "Agricultural landscape. No single conservation body. Formal cultural landscape designation recommended." } },
+  18: { priority: 3, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Accessible by road on Leeward Highway, approx 1 hr from Kingstown. Heritage park open — film set remains in place. Anchorage available.",
+        ownership: { type: "NPA / Private", body: "National Parks Authority (park area); private dock operators", contact: "npa@gov.vc", notes: "Disney film set buildings are temporary structures — long-term preservation plan needed." } },
+  19: { priority: 3, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Heritage fabric contained within Grand View Beach Hotel — not publicly accessible as heritage site. Heritage viewing by appointment with hotel management.",
+        ownership: { type: "Private", body: "Grand View Beach Hotel (Juliette Providence, proprietor)", contact: "grandviewsvg@gmail.com", notes: "PRIVATE — Do not publish. Heritage easement over original fabric should be explored with owners." } },
+  20: { priority: 2, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Battlefield site — not formally marked or accessible as heritage site. Roadside viewing only. Interpretation signage urgently needed.",
+        ownership: { type: "Mixed Private/Government", body: "Multiple private landowners and Crown land", contact: null, notes: "No formal designation. National Trust should seek to mark and interpret this site." } },
+  21: { priority: 5, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "20 min hike from Richmond. 2 hr drive from Kingstown via Leeward Highway. Swimwear recommended. No formal entry fee. Local guides available in Richmond.",
+        ownership: { type: "Crown/Government", body: "Crown Lands / National Parks Authority", contact: "npa@gov.vc", notes: "No formal gazettal. Should be considered for NPA management." } },
+  22: { priority: 4, conditionReportUrl: null, conditionReportDate: null,
+        accessDetails: "Active church — open to respectful visitors during daylight hours. Central Kingstown, short walk from Market Square.",
+        ownership: { type: "Religious", body: "Methodist Church in the Caribbean and the Americas (MCCA)", contact: null, notes: "Active place of worship. Building in reasonable condition but roof maintenance required." } },
+};
+
+// Merge extras into SITES
+SITES.forEach(s => Object.assign(s, SITE_EXTRAS[s.id] || {}));
+
+// ─── PRIORITY CONFIG ─────────────────────────────────────────
+const PRIORITY_CONFIG = {
+  1: { label: 'Highly At Risk', color: '#c0392b' },
+  2: { label: 'At Risk', color: '#e67e22' },
+  3: { label: 'Needs Attention', color: '#c9a800' },
+  4: { label: 'Good Condition', color: '#27ae60' },
+  5: { label: 'Well Maintained', color: '#2980b9' },
+};
+
+function priorityPips(priority, size = 'normal') {
+  const cfg = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG[3];
+  const pipSize = size === 'small' ? 'card-pip' : 'pip';
+  let html = `<div class="priority-pips ${size === 'small' ? 'card-priority-pips' : ''}">`;
+  for (let i = 1; i <= 5; i++) {
+    html += `<div class="${pipSize} ${i <= priority ? 'filled' : 'empty'}" style="color:${cfg.color}; background-color:${i <= priority ? cfg.color : 'transparent'}"></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+// ─── ADMIN / OWNERSHIP ───────────────────────────────────────
+// NOTE TO DATABASE EDITORS: Change the password below to your own secure password
+// before deploying. This is a basic client-side lock — for highly sensitive data
+// consider moving ownership to a separate password-protected spreadsheet.
+const ADMIN_PASSWORD = "SVGTrust2026";
+let adminUnlocked = false;
+
+function openAdminOverlay() {
+  document.getElementById('admin-overlay').classList.add('visible');
+  document.getElementById('admin-pw-input').value = '';
+  document.getElementById('admin-error').style.display = 'none';
+  setTimeout(() => document.getElementById('admin-pw-input').focus(), 100);
+}
+
+function closeAdminOverlay() {
+  document.getElementById('admin-overlay').classList.remove('visible');
+}
+
+function attemptUnlock() {
+  const pw = document.getElementById('admin-pw-input').value;
+  if (pw === ADMIN_PASSWORD) {
+    adminUnlocked = true;
+    closeAdminOverlay();
+    document.getElementById('admin-status-bar').classList.add('visible');
+    if (selectedId) selectSite(selectedId); // re-render detail panel
+  } else {
+    document.getElementById('admin-error').style.display = 'block';
+    document.getElementById('admin-pw-input').value = '';
+    document.getElementById('admin-pw-input').focus();
+  }
+}
+
+function lockAdmin() {
+  adminUnlocked = false;
+  document.getElementById('admin-status-bar').classList.remove('visible');
+  if (selectedId) selectSite(selectedId); // re-render to hide ownership
+}
+
+// ─── CATEGORY CONFIG ─────────────────────────────────────────
+const CAT_CONFIG = {
+  fort:       { label: 'Fort & Military',        color: '#6b2d0f', icon: '⚔' },
+  battle:     { label: 'Battle Site',            color: '#8b1a1a', icon: '🗡' },
+  indigenous: { label: 'Indigenous / Amerindian',color: '#4a6741', icon: '🪨' },
+  colonial:   { label: 'Colonial Infrastructure',color: '#1d5c7a', icon: '🏗' },
+  natural:    { label: 'Natural Heritage',       color: '#3d6b3a', icon: '🌿' },
+  religious:  { label: 'Religious & Civic',      color: '#7a4a1a', icon: '⛪' },
+  cultural:   { label: 'Cultural Landscape',     color: '#4a3a7a', icon: '🏛' },
+};
+
+let selectedId = null;
+let currentFilter = 'all';
+let currentPriorityFilter = 0;
+
+function createCard(site) {
+  const cat = CAT_CONFIG[site.category];
+  const pri = PRIORITY_CONFIG[site.priority] || PRIORITY_CONFIG[3];
+  const card = document.createElement('div');
+  card.className = 'site-card';
+  card.dataset.id = site.id;
+  card.dataset.cat = site.category;
+  card.dataset.priority = site.priority;
+  card.onclick = () => selectSite(site.id);
+
+  card.innerHTML = `
+    <div class="card-image">
+      ${site.image
+        ? `<img src="${site.image}" alt="${site.name}" onerror="this.parentElement.innerHTML='<span class=\\'placeholder-icon\\'>${cat.icon}</span>'">`
+        : `<span class="placeholder-icon">${cat.icon}</span>`}
+      <span class="cat-badge bg-${site.category}">${cat.label}</span>
+      ${site.protected ? '<span class="protected-badge">★ Protected</span>' : ''}
+    </div>
+    <div class="card-body">
+      <div class="card-ref">${site.ref}</div>
+      <div class="card-title">${site.name}</div>
+      <div class="card-location">📍 ${site.location}</div>
+      <div class="card-desc">${site.description}</div>
+      <div class="card-priority priority-${site.priority}">
+        ${priorityPips(site.priority, 'small')}
+        <span style="font-family:monospace;font-size:0.65rem;color:${pri.color};margin-left:4px">${pri.label}</span>
+      </div>
+      <div class="card-footer">
+        <span class="card-coords">${site.lat.toFixed(4)}°N, ${Math.abs(site.lng).toFixed(4)}°W</span>
+        <span class="card-era">${site.era}</span>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+function renderCards() {
+  const grid = document.getElementById('cards-grid');
+  grid.innerHTML = '';
+  const visible = SITES.filter(s => {
+    const catOk = currentFilter === 'all' || s.category === currentFilter;
+    const priOk = currentPriorityFilter === 0 || s.priority <= currentPriorityFilter;
+    return catOk && priOk;
+  });
+  visible.forEach((site, i) => {
+    const card = createCard(site);
+    card.style.animationDelay = `${i * 0.04}s`;
+    card.style.opacity = '0';
+    grid.appendChild(card);
+  });
+  document.getElementById('site-count').textContent = `Showing ${visible.length} of ${SITES.length} sites`;
+}
+
+function filterSites(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn:not([onclick*="filterPriority"])').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+  if (selectedId) {
+    const card = document.querySelector(`.site-card[data-id="${selectedId}"]`);
+    if (card) card.classList.add('selected');
+  }
+}
+
+function filterPriority(p, btn) {
+  currentPriorityFilter = p;
+  document.querySelectorAll('[onclick*="filterPriority"]').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+
+function selectSite(id) {
+  selectedId = id;
+  document.querySelectorAll('.site-card').forEach(c => c.classList.remove('selected'));
+  const card = document.querySelector(`.site-card[data-id="${id}"]`);
+  if (card) card.classList.add('selected');
+
+  const site = SITES.find(s => s.id === id);
+  document.getElementById('detail-empty').style.display = 'none';
+
+  const cat = CAT_CONFIG[site.category];
+  const pri = PRIORITY_CONFIG[site.priority] || PRIORITY_CONFIG[3];
+  const content = document.getElementById('detail-content');
+  content.className = 'detail-content active';
+
+  // Condition report block
+  const conditionBlock = site.conditionReportUrl
+    ? `<a class="condition-link" href="${site.conditionReportUrl}" target="_blank">📋 View Condition Report${site.conditionReportDate ? ' (' + site.conditionReportDate + ')' : ''}</a>`
+    : `<div class="condition-pending">📋 Condition report not yet uploaded — add Google Doc link to conditionReportUrl field</div>`;
+
+  // Ownership block (admin only)
+  const ownershipBlock = site.ownership ? `
+    <button class="admin-toggle" onclick="${adminUnlocked ? 'void(0)' : 'openAdminOverlay()'}">
+      ${adminUnlocked ? '🔓 Private Data Unlocked' : '🔒 View Ownership & Private Data (Admin Only)'}
+    </button>
+    <div class="ownership-block ${adminUnlocked ? 'visible' : ''}">
+      <div class="priv-label">Private / Not for Public Display</div>
+      <div class="own-field"><span>Ownership Type: </span>${site.ownership.type}</div>
+      <div class="own-field"><span>Owner / Body: </span>${site.ownership.body}</div>
+      ${site.ownership.contact ? `<div class="own-field"><span>Contact: </span>${site.ownership.contact}</div>` : ''}
+      ${site.ownership.notes ? `<div class="own-field"><span>Notes: </span>${site.ownership.notes}</div>` : ''}
+    </div>` : '';
+
+  content.innerHTML = `
+    <span class="detail-cat-badge bg-${site.category}">${cat.icon} ${cat.label}</span>
+    <div class="detail-title">${site.name}</div>
+    <div class="detail-subtitle">${site.altName || site.ref} · ${site.island}</div>
+    <div class="detail-divider"></div>
+
+    <div class="detail-grid">
+      <div class="detail-field">
+        <label>Reference</label>
+        <span>${site.ref}</span>
+      </div>
+      <div class="detail-field">
+        <label>Period / Era</label>
+        <span>${site.era}</span>
+      </div>
+      <div class="detail-field">
+        <label>Location</label>
+        <span>${site.location}</span>
+      </div>
+      <div class="detail-field">
+        <label>Coordinates</label>
+        <span>${site.lat.toFixed(5)}°N, ${Math.abs(site.lng).toFixed(5)}°W</span>
+      </div>
+      <div class="detail-field" style="grid-column:1/-1">
+        <label>Protected Status</label>
+        <span>${site.protected ? '★ Protected National Heritage' : 'Heritage site — protection status to be assessed'}</span>
+      </div>
+    </div>
+
+    <div class="detail-divider"></div>
+
+    <!-- Conservation Priority -->
+    <div class="detail-field" style="margin-bottom:0.8rem">
+      <label>Conservation Priority</label>
+      <div class="priority-bar priority-${site.priority}" style="margin-top:0.4rem">
+        ${priorityPips(site.priority)}
+        <span class="priority-label" style="color:${pri.color}">${site.priority}/5 — ${pri.label}</span>
+      </div>
+    </div>
+
+    <div class="detail-desc">${site.description}</div>
+
+    <div class="detail-status" style="margin-top:0.8rem">
+      <strong>Current Status:</strong> ${site.status}
+    </div>
+    <div class="detail-status" style="margin-top:0.5rem; border-left-color:#4a8aaa; background:rgba(29,92,122,0.12)">
+      <strong>Heritage Significance:</strong> ${site.significance}
+    </div>
+
+    <!-- Access Details -->
+    <div class="access-block">
+      <strong>Access Details</strong>
+      ${site.accessDetails || 'Access details not yet recorded.'}
+    </div>
+
+    <!-- Condition Report -->
+    ${conditionBlock}
+
+    <!-- Map Link -->
+    <a class="map-link" href="${site.googleMapsLink}" target="_blank">🗺 Open in Google Maps</a>
+
+    <!-- Ownership (admin only) -->
+    ${ownershipBlock}
+  `;
+
+  // Update map dot highlights
+  document.querySelectorAll('.map-dot').forEach(d => d.classList.remove('highlight'));
+  const dot = document.getElementById(`dot-${id}`);
+  if (dot) dot.classList.add('highlight');
+}
+
+function renderMapDots() {
+  const g = document.getElementById('map-dots');
+  g.innerHTML = '';
+  SITES.forEach(site => {
+    const cat = CAT_CONFIG[site.category];
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    dot.classList.add('map-dot');
+    dot.id = `dot-${site.id}`;
+    dot.onclick = () => selectSite(site.id);
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', site.mapX);
+    circle.setAttribute('cy', site.mapY);
+    circle.setAttribute('r', '6');
+    circle.setAttribute('fill', cat.color);
+    circle.setAttribute('stroke', '#f5f0e8');
+    circle.setAttribute('stroke-width', '1.5');
+    circle.setAttribute('opacity', '0.9');
+
+    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+    title.textContent = site.name;
+
+    dot.appendChild(circle);
+    dot.appendChild(title);
+    g.appendChild(dot);
+  });
+}
+
+// Init
+renderCards();
+renderMapDots();
+</script>
+</body>
+</html>
